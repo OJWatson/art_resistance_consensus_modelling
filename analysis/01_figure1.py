@@ -95,7 +95,7 @@ for i in range(len(medians.index.values)):
                   edgecolor='black', linewidth=1.5)
 
     if i==4:
-        a0[0].annotate('10% TF', (medians.TIME_TO_10p_TF[freq]-16,i*scale-space-text_offset_y2),
+        a0[0].annotate('10%', (medians.TIME_TO_10p_TF[freq]-16,i*scale-space-text_offset_y2),
                        size=a_size, c='r', weight='bold')
         a0[0].annotate('25% TF', (medians.TIME_TO_25p_TF[freq]-text_offset,i*scale-space-text_offset_y2),
                        size=a_size, c='r', weight='bold')
@@ -120,7 +120,7 @@ a0[0].set_xticklabels([])
 
 a0[0].set_yticks(np.arange(0, 5,1)-space/2)
 a0[0].set_yticklabels(['0.00', '0.01', '0.10', '0.25', '0.5'])
-a0[0].set_ylabel('Pre-existing partner\n drug resistance')
+a0[0].set_ylabel('Starting partner\n drug resistance')
 
 a0[0].grid(axis='y')
 a0[0].spines['top'].set_visible(False)
@@ -128,7 +128,7 @@ a0[0].spines['right'].set_visible(False)
 a0[0].spines['left'].set_visible(False)
 a0[0].spines['bottom'].set_visible(False)
 
-a0[0].set_title('PSU CIDD')
+a0[0].set_title('PSU')
 
 # plt.subplot_adjust(hspace=0.100)
 
@@ -194,7 +194,7 @@ a0[1].spines['top'].set_visible(False)
 a0[1].spines['right'].set_visible(False)
 a0[1].spines['left'].set_visible(False)
 a0[1].spines['bottom'].set_visible(False)
-a0[1].set_title('IMPERIAL')
+a0[1].set_title('Imperial')
 
 #####
 #MORU plot1
@@ -289,7 +289,7 @@ a1[0].set_xticks(np.arange(start_time, total_time+1, 12*5.0))
 a1[0].set_xticklabels([])
 
 # a1.set_ylabel('580Y Frequency',fontsize=fs)
-a1[0].set_ylabel('580Y Frequency')
+a1[0].set_ylabel('580Y Frequency\n')
 # a1.set_title('[A4] TC=0.4  PFPR5 PSU',fontsize=18, fontweight='bold')
 
 ############
@@ -471,6 +471,6 @@ a2[2].set_xlabel('Year')
 #legend
 
 init_freqs_labels = ['0.00', '0.01', '0.10', '0.25','0.50']
-a1[1].legend(init_freqs_labels)
+a1[1].legend(init_freqs_labels, bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
 
-plt.savefig("analysis/plots/fig1.png", bbox_inches = "tight", dpi = 300)
+plt.savefig("analysis/plots/fig1.png", bbox_inches = "tight", dpi = 60)

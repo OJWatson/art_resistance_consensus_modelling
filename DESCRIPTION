@@ -12,8 +12,9 @@ LazyData: true
 Imports:
     here,
     cowplot,
-    ggplot2, 
-    igraph
+    ggplot2,
+    igraph,
+    dplyr,
+    stringr
 Suggests:
     devtools
-    
