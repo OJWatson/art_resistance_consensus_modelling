@@ -471,6 +471,7 @@ a2[2].set_xlabel('Year')
 #legend
 
 init_freqs_labels = ['0.00', '0.01', '0.10', '0.25','0.50']
-a1[1].legend(init_freqs_labels, bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
+a1[1].legend(init_freqs_labels)
 
 plt.savefig("analysis/plots/fig1.png", bbox_inches = "tight", dpi = 60)
+plt.savefig("analysis/plots/fig1.pdf", bbox_inches = "tight", dpi = 60)

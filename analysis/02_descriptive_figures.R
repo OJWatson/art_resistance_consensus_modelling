@@ -34,6 +34,8 @@ summaries <- lapply(c("A4", NA,"A5", NA, "A6"), function(x) {
   }
 
   title <- c("Dihydroartemisinin-Piperaquine", "Artesunate-Amodiaquine", "Artemether-Lumefantrine")[match(x, c("A4", "A5", "A6"))]
+  xlab <- c("PPQ-Resistance", "Amodiaquine-Resistance", "Lumefantrine Resistance")[match(x, c("A4", "A5", "A6"))]
+
   title <- paste("Scenarios with", title, "used as the first-line therapy")
   gg <- df[df$SCENARIO==x, ] %>%
     rowwise() %>%
@@ -56,7 +58,7 @@ summaries <- lapply(c("A4", NA,"A5", NA, "A6"), function(x) {
   facet_grid(PFPR~TREATMENT_COVERAGE) +
   geom_hline(yintercept = 10, linetype="dotted") +
   theme_bw() +
-    xlab("Starting partner drug resistance frequency") +
+    xlab(xlab) +
     ylab("Years for 580Y frequency to reach 0.25") +
   geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100,),
                width=0.4, position = position_dodge(width=0.7), stat="identity") +
@@ -66,16 +68,19 @@ summaries <- lapply(c("A4", NA,"A5", NA, "A6"), function(x) {
           legend.position = "top",
           legend.key.size = unit(18, "pt"),
           plot.title = element_text(hjust = 0.5)) +
-    ggtitle(title) + ylim(c(0,40))
+    ylim(c(0,40)) +
+    theme(legend.key.width =  unit(30, "pt"), legend.text = element_text(size = 12),
+          legend.position = "top", text = element_text(size = 12), strip.text = element_text(size = 12))
+
 
   return(gg_plot)
 })
 
 # individual plot saves
 leg <- cowplot::get_legend(summaries[[1]] + theme(legend.position = "right"))
-save_figs("dha_ppq", cowplot::plot_grid(summaries[[1]] + theme(legend.position = "none"), leg, rel_widths = c(1,0.1)), width = 12, height = 6)
-save_figs("asaq", cowplot::plot_grid(summaries[[3]] + theme(legend.position = "none"), leg, rel_widths = c(1,0.1)), width = 12, height = 6)
-save_figs("al", cowplot::plot_grid(summaries[[5]] + theme(legend.position = "none"), leg, rel_widths = c(1,0.1)), width = 12, height = 6)
+save_figs("dha_ppq", summaries[[1]], width = 12, height = 10)
+save_figs("asaq", summaries[[3]], width = 12, height = 10)
+save_figs("al", summaries[[5]], width = 12, height = 10)
 
 # alltogether
 summaries[[1]] <- summaries[[1]] + theme(legend.position = "none")
@@ -304,7 +309,7 @@ save_figs("selection_densities", s3_gg, width = 12, height = 5)
 alignment_moru <- read_csv('analysis/data/raw/figure1/moru/A4_MORU_rev17.csv') %>% mutate(MODEL = "MORU")
 alignment_psu <- read_csv('analysis/data/raw/figure1/psu/A4_PSU_mu_0p001983_20200229.csv') %>% mutate(MODEL = "PSU")
 alignment_imperial = read_csv('analysis/data/raw/figure1/imperial/A4_IMPERIAL_magenta_1.3.0_2020022.csv')[,-1] %>% mutate(MODEL = "Imperial")
-alignment_df <- dplyr::bind_rows(aligment_moru, alignment_psu, alignment_imperial) %>%
+alignment_df <- dplyr::bind_rows(alignment_moru, alignment_psu, alignment_imperial) %>%
   mutate(MODEL = factor(MODEL, levels=c("MORU", "PSU", "Imperial")))
 
 alignment_gg <- alignment_df %>%
@@ -330,4 +335,4 @@ alignment_gg <- alignment_df %>%
   guides(color = guide_legend(override.aes = list(colour = NULL, lwd = 0)),
          fill = guide_legend(override.aes = list(alpha = 1)))
 
-save_figs("alignment", alignment_gg, width = 6, height = 3)
+save_figs("alignment", alignment_gg, width = 9, height = 4)

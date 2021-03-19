@@ -15,6 +15,7 @@ Imports:
     ggplot2,
     igraph,
     dplyr,
-    stringr
+    stringr,
+    fields
 Suggests:
     devtools
