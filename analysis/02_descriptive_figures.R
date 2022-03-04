@@ -11,12 +11,12 @@ for(x in seq_along(ls)) {
   dat[[x]][["rep"]] <- NULL
   dat[[x]][["X"]] <- NULL
   dat[[x]]$MODEL <- lapply(stringr::str_split(ls, "/"),"[[", 5)[[x]]
+  dat[[x]]$MODEL <- factor(c("MORU", "PSU", "Imperial")[match(dat[[x]]$MODEL,c("moru", "psu", "imperial"))], levels=c("MORU", "PSU", "Imperial"))
   dat[[x]]$SCENARIO <- substr(lapply(stringr::str_split(ls, "/"),"[[", 6)[[x]], 1, 2)
 }
 
 df <- dplyr::bind_rows(dat)
-df$MODEL <- factor(c("MORU", "PSU", "Imperial")[match(df$MODEL,c("moru", "psu", "imperial"))], levels=c("MORU", "PSU", "Imperial"))
-df <- df[df$STARTING_PARTNER_DRUG_FREQ < 1, ]
+df <- df[df$STARTING_PARTNER_DRUG_FREQ < 1, ] # PSU Had a an extra starting partner drug scenario here
 
 # set all times that werent reached to grrreater than 40 for presentation ease
 df[,grep("TIME", names(df))][which(df[,grep("TIME", names(df))] >= 40, arr.ind = TRUE)] <- NA
@@ -172,8 +172,6 @@ save_figs(name = "median_times_tiled", gg2, height = 9, width = 15, root = "anal
 # ------------------------------------------------------------------------------
 
 df <- do.call(rbind, dat)
-df$MODEL[df$MODEL=="PSU_CIDD"] <- "PSU"
-df$MODEL <- factor(df$MODEL, levels=c("MORU", "PSU", "IMPERIAL"))
 df <- df[df$STARTING_PARTNER_DRUG_FREQ < 1, ]
 df$TIME_TO_1p_580Y[df$TIME_TO_1p_580Y>40] <- NA
 df$TIME_TO_10p_580Y[df$TIME_TO_10p_580Y>40] <- NA
@@ -202,7 +200,7 @@ ggplot(gg, aes(x=s01025, y = as.factor(STARTING_PARTNER_DRUG_FREQ),
   facet_grid(PFPR~TREATMENT_COVERAGE, scales = "free_x") +
   theme_bw() +
   ylab("Starting partner drug resistance (%)") +
-  xlab("Selection Coefficient from 0.1 to 0.25 580Y frequency") +
+  xlab(expression(Selection~Coefficient~"("*italic(s)["0.01-0.25"]*")")) +
   scale_fill_manual(values = c("#7f9fad","#dda7c7","#ffd27f"), name = "") +
   theme(strip.background = element_blank(),
         strip.text = element_text(size=10),
@@ -246,7 +244,8 @@ s1_gg <- df %>% group_by(SCENARIO, MODEL, PFPR, TREATMENT_COVERAGE, STARTING_PAR
   theme(strip.background = element_blank(),
         strip.text = element_text(size=10)) +
   xlab("Starting Partner Drug Resistance Frequency\n") +
-  ylab("\nSelection Coefficient, s (0.01 0.1)")
+  ylab(expression(Selection~Coefficient~"("*italic(s)["0.01-0.1"]*")"))
+
 
 
 s2_gg <- df %>% group_by(SCENARIO, MODEL, PFPR, TREATMENT_COVERAGE, STARTING_PARTNER_DRUG_FREQ ) %>%
@@ -269,7 +268,7 @@ s2_gg <- df %>% group_by(SCENARIO, MODEL, PFPR, TREATMENT_COVERAGE, STARTING_PAR
   theme(strip.background = element_blank(),
         strip.text = element_text(size=10)) +
   xlab("Starting Partner Drug Resistance Frequency\n") +
-  ylab("\nSelection Coefficient, s (0.1 0.25)")
+  ylab(expression(Selection~Coefficient~"("*italic(s)["0.1-0.25"]*")"))
 
 save_figs("selection_coeffs", cowplot::plot_grid(s1_gg, s2_gg, ncol = 1, labels = "auto"), width = 10, height = 10)
 

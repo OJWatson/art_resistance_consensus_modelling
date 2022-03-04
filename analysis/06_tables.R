@@ -12,6 +12,7 @@ df <- dplyr::bind_rows(dat)
 df$MODEL <- factor(c("MORU", "PSU", "Imperial")[match(df$MODEL,c("moru", "psu", "imperial"))], levels=c("MORU", "PSU", "Imperial"))
 df_cache <- df[df$STARTING_PARTNER_DRUG_FREQ < 1, ]
 
+
 # Downstream table generation packages
 library(tidyverse)
 library(broom)
@@ -181,3 +182,83 @@ supp_plot_pfpr <- test %>%
         strip.background = element_rect(fill = "white", colour = "grey"),
         panel.border = element_rect(colour = "grey", fill = NA))
 save_figs("supp_pfpr", supp_plot_pfpr, width = 9, height = 6)
+
+
+########- revision
+
+test2 <- test %>% group_by(PFPR, TREATMENT_COVERAGE, STARTING_PARTNER_DRUG_FREQ, MODEL, SCENARIO) %>% mutate(rep = seq_len(n()))
+
+generate_table <- function(ft = 0.4, pfpr = 5) {
+
+# first for PFPR == 5
+tbl_a2 <- test2 %>%
+  filter(TREATMENT_COVERAGE == ft & STARTING_PARTNER_DRUG_FREQ == 0 & PFPR == pfpr) %>%
+  group_by(MODEL, SCENARIO, STARTING_PARTNER_DRUG_FREQ) %>%
+  summarise(TY_25 = paste0(x_to_z_if_y(median(TIME_TO_25p_580Y)),
+                           " [",
+                           paste(x_to_z_if_y(quantile(TIME_TO_25p_580Y, 0.25)),
+                                 x_to_z_if_y(quantile(TIME_TO_25p_580Y, 0.75)),
+                                 sep = ", "),
+                           "]")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A4", "DHA-PPQ")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A5", "ASAQ")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A6", "AL")) %>%
+  arrange(desc(SCENARIO)) %>%
+  tidyr::pivot_wider(names_from = STARTING_PARTNER_DRUG_FREQ, values_from = TY_25,
+                     names_prefix = "PD_")
+
+# Split out 0 PD into new column
+test_formed2 <- left_join(
+  test %>% filter(TREATMENT_COVERAGE == ft & STARTING_PARTNER_DRUG_FREQ != 0.0 & PFPR == pfpr) %>% mutate(rep = 1:100),
+  test %>% filter(TREATMENT_COVERAGE == ft & STARTING_PARTNER_DRUG_FREQ == 0.0 & PFPR == pfpr) %>% mutate(rep = 1:100) %>%
+    rename(TIME_TO_25p_580Y_0 = TIME_TO_25p_580Y) %>% ungroup %>%
+    select(PFPR, TREATMENT_COVERAGE, SCENARIO, MODEL, TIME_TO_25p_580Y_0, rep)
+)
+
+# Create second table for percentage difference
+tbl_b2 <- test_formed2 %>%
+  filter(TREATMENT_COVERAGE == ft) %>%
+  group_by(MODEL, SCENARIO, STARTING_PARTNER_DRUG_FREQ) %>%
+  summarise(TY_25_DIFF = perc_diff_func(TIME_TO_25p_580Y_0, TIME_TO_25p_580Y)) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A4", "DHA-PPQ")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A5", "ASAQ")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A6", "AL")) %>%
+  arrange(desc(SCENARIO)) %>%
+  tidyr::pivot_wider(names_from = STARTING_PARTNER_DRUG_FREQ, values_from = TY_25_DIFF,
+                     names_prefix = "PD_DIFF")
+
+# Lastly get the gradients
+grads2 <- test2 %>%
+  filter(TREATMENT_COVERAGE == ft & PFPR == pfpr, STARTING_PARTNER_DRUG_FREQ != 0) %>%
+  ungroup %>%
+  select(MODEL, SCENARIO, STARTING_PARTNER_DRUG_FREQ, TIME_TO_25p_580Y) %>%
+  nest(data = -(1:2)) %>%
+  mutate(
+    fit = map(data, ~ lm(TIME_TO_25p_580Y ~ log(STARTING_PARTNER_DRUG_FREQ), data = .x)),
+    tidied = map(fit, tidy)
+  ) %>%
+  unnest(tidied) %>%
+  filter(term != "(Intercept)") %>%
+  select(MODEL, SCENARIO, estimate) %>%
+  mutate(estimate = sprintf("%.1f", round(estimate*log(0.1), 2))) %>%
+  rename(`Years Lost` = estimate) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A4", "DHA-PPQ")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A5", "ASAQ")) %>%
+  mutate(SCENARIO = replace(SCENARIO, SCENARIO=="A6", "AL"))
+
+# Table 1 Overall
+to_save2 <- left_join(left_join(tbl_a2, tbl_b2), grads2)
+
+return(to_save2)
+
+}
+
+rev_tbl_1 <- generate_table(pfpr = 1)
+rev_tbl_5 <- generate_table(pfpr = 5)
+rev_tbl_10 <- generate_table(pfpr = 10)
+rev_tbl_20 <- generate_table(pfpr = 20)
+
+write.table(rev_tbl_5, file = "analysis/tables/tbl1.tsv", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(rev_tbl_1, file = "analysis/tables/supp_table_5.tsv", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(rev_tbl_10, file = "analysis/tables/supp_table_6.tsv", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(rev_tbl_20, file = "analysis/tables/supp_table_7.tsv", quote = FALSE, sep = "\t", row.names = FALSE)

@@ -113,5 +113,36 @@ v3 <- ggplot(varimps, aes(allele, imp_asaq)) + geom_bar(stat = "identity") +
   ggpubr::theme_pubclean(base_size = 12) +
   theme(axis.line = element_line(), legend.key = element_rect(fill = NA),axis.text.x = element_text(angle = 45, hjust = 1))
 
-comb <- cowplot::plot_grid(g1,g2,g3,v1,v2,v3, ncol = 3, labels = "auto")
-save_figs("rf_allele", comb, height = 12, width = 16)
+## Random forest performance
+
+df_res <- data.frame("prediction" = c(rf_dhappq$predicted, rf_asaq$predicted, rf_al$predicted),
+           "observed" = c(dt_df$tf_dhappq, dt_df$tf_asaq, dt_df$tf_al),
+           "drug" = c(rep("DHA-PPQ", 64),rep("ASAQ", 64),rep("AL", 64)))
+
+
+rf_gg <- ggplot(df_res, aes(observed, prediction, color = drug)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  xlab("Observed 28-Day Treatment Failure") +
+  ylab("Predicted 28-Day Treatment Failure") +
+  scale_color_viridis_d(name = "Drug") +
+  theme_bw()
+
+rf_gg_2 <- df_res %>% group_by(drug) %>%
+  summarise(`1 - Correlation` = 1-round(cor(prediction, observed), 4),
+            MAE = round(mean(abs(prediction - observed)),4),
+            RMSE = round(sqrt(mean((prediction - observed)^2)),4)) %>%
+  pivot_longer(`1 - Correlation`:RMSE) %>%
+  ggplot(aes(name, value, fill = drug)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  xlab("Model Metric") +
+  ylab("Model Performance") +
+  scale_fill_viridis_d(name = "Drug") +
+  theme_bw()
+
+
+comb <- cowplot::plot_grid(g1,g2,g3,NA, NA, NA, v1,v2,v3, ncol = 3, labels = c("a","b","c","","","","d","e","f"), rel_heights = c(1,0.1,1))
+comb2 <- cowplot::plot_grid(rf_gg, rf_gg_2, labels = c("h", "i"), ncol = 2)
+
+save_figs("rf_allele", cowplot::plot_grid(comb, NA, comb2, ncol = 1, rel_heights = c(0.75, 0.025, 0.25)), height = 16, width = 16)

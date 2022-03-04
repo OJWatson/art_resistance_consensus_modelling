@@ -12,7 +12,8 @@ save_figs <- function(name,
   cowplot::save_plot(filename = fig_path(paste0(name,".png")),
                      plot = fig,
                      base_height = height,
-                     base_width = width)
+                     base_width = width,
+                     bg = "white")
 
   pdf(file = fig_path(paste0(name,".pdf")), width = width, height = height)
   print(fig)

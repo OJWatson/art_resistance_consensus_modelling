@@ -4,14 +4,15 @@ make_lineage_plot <- function(model, drug) {
   df <- read.csv(paste0("analysis/data/raw/lineages/",model,"_",drug,".csv"))
   drug_name <- c("DHA-PPQ","AL","ASAQ")[match(drug, c("dhappq","al","asaq"))]
 
-  fits <- unique(cbind(df$Lineage, df$Prob_LPF))
+  fits <- unique(cbind(df$Genotype, df$Prob_LPF))
   fits <- fits[order(fits[,2]),]
 
-  df$Lineage <- factor(df$Lineage, levels = fits[,1])
+  df$Genotype <- factor(df$Genotype, levels = fits[,1])
+  fitness_dhappq <- data.frame("Prob_LPF" = magenta:::drug_create_dhappq()$lpf, Genotype = drug_table$Genotype)
 
   df %>%
     filter(Strains != 0) %>%
-    ggplot(aes(Time, Strains, fill = Prob_LPF, group = Lineage)) +
+    ggplot(aes(Time, Strains, fill = Prob_LPF, group = Genotype)) +
     geom_bar(position = "fill",stat = "identity", lwd = 0) +
     ggpubr::theme_pubclean() +
     scale_fill_gradient2(midpoint = min(fitness_dhappq$Prob_LPF) + (max(fitness_dhappq$Prob_LPF)-min(fitness_dhappq$Prob_LPF))/2,
