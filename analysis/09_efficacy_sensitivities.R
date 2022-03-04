@@ -51,7 +51,7 @@ for(x in seq_along(ls)) {
 df <- dplyr::bind_rows(dat)
 df <- df[df$STARTING_PARTNER_DRUG_FREQ < 1, ] # PSU Had a an extra starting partner drug scenario here
 
-# set all times that werent reached to grrreater than 40 for presentation ease
+# set all times that werent reached to greater than 40 for presentation ease
 df[,grep("TIME", names(df))][which(df[,grep("TIME", names(df))] >= 40, arr.ind = TRUE)] <- NA
 df[,grep("TIME", names(df))][which(is.na(df[,grep("TIME", names(df))]), arr.ind = TRUE)] <- 45
 
