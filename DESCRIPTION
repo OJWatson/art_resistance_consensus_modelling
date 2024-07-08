@@ -1,7 +1,7 @@
 Package: artwp2
 Type: Package
 Title: Artemisinin Consensus Modelling Resistance
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
   person("OJ", "Watson", email = "o.watson15@imperial.ac.uk", role = c("aut", "cre"))
   )
